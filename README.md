@@ -22,14 +22,24 @@ All three tools return rated buckets (`good`, `improve`, `poor`) matching the Co
 
 The server supports two methods:
 
-1. **API key.** Generate one at [coredash.app/settings/api](https://coredash.app/settings/api). Pass it as `Authorization: Bearer cdk_YOUR_API_KEY`.
-2. **OAuth.** Clients that follow the `WWW-Authenticate` discovery flow can authenticate without an API key. The server publishes `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource`.
+1. **OAuth (recommended).** Point your MCP client at the server URL and complete the browser sign-in when prompted — no API key required. The server follows the `WWW-Authenticate` discovery flow and publishes `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource`.
+2. **API key.** Best for CI or headless use. Generate one at [coredash.app/settings/api](https://coredash.app/settings/api) and pass it as `Authorization: Bearer cdk_YOUR_API_KEY`.
 
 Anonymous calls succeed for `initialize` (so clients can introspect server capabilities) and fail for any tool call.
 
 ## Connecting
 
 ### Claude Code
+
+Add the server, then authenticate in the browser:
+
+```bash
+claude mcp add --transport http coredash https://app.coredash.app/api/mcp
+```
+
+Run `/mcp` inside Claude Code, select **coredash**, and complete the OAuth sign-in.
+
+To use an API key instead (e.g. in CI), pass it as a header:
 
 ```bash
 claude mcp add --transport http coredash https://app.coredash.app/api/mcp \
@@ -38,38 +48,36 @@ claude mcp add --transport http coredash https://app.coredash.app/api/mcp \
 
 ### Cursor
 
-Add to `~/.cursor/mcp.json`:
+Add to `~/.cursor/mcp.json`, then click **Login** on the server in Cursor's MCP settings to complete OAuth:
 
 ```json
 {
   "mcpServers": {
     "coredash": {
-      "url": "https://app.coredash.app/api/mcp",
-      "headers": {
-        "Authorization": "Bearer cdk_YOUR_API_KEY"
-      }
+      "url": "https://app.coredash.app/api/mcp"
     }
   }
 }
 ```
+
+To use an API key instead, add a `"headers"` block with `"Authorization": "Bearer cdk_YOUR_API_KEY"`.
 
 ### VS Code
 
-Add to your user `settings.json`:
+Add to `.vscode/mcp.json` in your workspace (or the user config via the **MCP: Open User Configuration** command). VS Code prompts you to sign in on first use:
 
 ```json
 {
-  "mcp.servers": {
+  "servers": {
     "coredash": {
       "type": "http",
-      "url": "https://app.coredash.app/api/mcp",
-      "headers": {
-        "Authorization": "Bearer cdk_YOUR_API_KEY"
-      }
+      "url": "https://app.coredash.app/api/mcp"
     }
   }
 }
 ```
+
+To use an API key instead, add a `"headers"` block with `"Authorization": "Bearer cdk_YOUR_API_KEY"`.
 
 ### Windsurf
 
@@ -77,7 +85,7 @@ Same JSON shape as Cursor, in the Windsurf MCP settings.
 
 ### Any other MCP client
 
-Point it at `https://app.coredash.app/api/mcp` with the `streamable-http` transport and the `Authorization` header above.
+Point it at `https://app.coredash.app/api/mcp` with the `streamable-http` transport. Clients that support OAuth discover the flow via the `WWW-Authenticate` header; otherwise pass an `Authorization: Bearer cdk_YOUR_API_KEY` header.
 
 ## Example queries
 
@@ -96,7 +104,7 @@ The registry manifest is in [`server.json`](./server.json). To publish a new ver
 ## Related projects
 
 - [`cwv-superpowers`](https://github.com/corewebvitals/cwv-superpowers). Skills package for Claude Code, Cursor, and Gemini that drives this MCP server to diagnose and fix Core Web Vitals issues.
-- [Core Web Vitals Visualizer](https://chromewebstore.google.com). Chrome extension. Lets you see CWV metrics overlayed on any page.
+- [Core Web Vitals Visualizer](https://chromewebstore.google.com/detail/core-web-vitals-visualize/mcffmgagphgpgkdclllnilokablhjcge). Chrome extension. Lets you see CWV metrics overlayed on any page.
 
 ## License
 
